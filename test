@@ -1,0 +1,16 @@
+# float로 입력받아 구간별로 판정하세요.
+distance = float(input())
+transport = ""
+
+if distance < 2:
+    transport = "도보"
+elif distance >= 2 and distance < 5:
+    transport = "자전거"
+elif distance >= 5 and distance < 20:
+    transport = "버스"
+else:
+    transport = "지하철"
+
+print(f"거리: {distance}km")
+print(f"추천 교통수단: {transport}")
+
