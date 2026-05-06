@@ -1,0 +1,96 @@
+import random
+
+# ============================================================
+# 데이터셋 (변경 금지) -- 정답: H(x) = 0.5x + 2  (w=0.5, b=2)
+# ============================================================
+random.seed(0)
+x_data = [i for i in range(1, 21)]
+y_data = [0.5 * x + 2 + random.uniform(-0.3, 0.3) for x in x_data]
+# ============================================================
+# 학생 구현 영역
+# ============================================================
+num_of_sample = len(x_data)
+
+# Warmup 으로 천천히 lr 을 올린 뒤 곧바로 Decay 로 0 까지 줄이는
+
+# 하이퍼파라미터 설정
+epochs = 1000
+batch_size = 4
+base_lr = 0.005
+
+
+# total step 계산
+steps_per_epoch = num_of_sample // batch_size
+total_steps = steps_per_epoch * epochs
+
+# warmup 시킬 스탭 수 설정
+warmup_steps = int(total_steps * 0.05)
+
+# decay를 시작할 스탭 수 설정
+decay_steps = total_steps - warmup_steps
+
+# 파라미터 설정
+w = random.random()
+b = random.random()
+
+#파라미터 업데이트 횟수 = step
+global_step = 0
+
+
+for epoch in range(1,epochs+1):
+    indices = list(range(num_of_sample))
+    random.shuffle(indices)
+
+    # epoch 당 loss 확인하기 위한 변수 선언
+    epoch_loss = 0.0
+    num_batches = 0
+
+    for start in range(0, num_of_sample, batch_size):
+        global_step += 1
+
+        #배치만큼 자르기
+        batch_indices = indices[start:batch_size + start]
+
+        current_batch_size = len(batch_indices)
+
+        w_grad = 0.0
+        b_grad = 0.0
+        batch_loss = 0.0
+
+
+        for index in batch_indices:
+            x = x_data[index]
+            y = y_data[index]
+
+            pred = w * x + b
+            error = pred - y
+
+            w_grad += 2 * x * error
+            b_grad += 2 * error
+            batch_loss += error ** 2
+
+        # 현재 batch_size 로 기울기 평균
+        w_grad /= current_batch_size
+        b_grad /= current_batch_size
+
+        epoch_loss += batch_loss / current_batch_size
+        num_batches += 1
+
+        # 삼각형 스케줄: warmup → decay
+        if global_step < warmup_steps:
+            lr = base_lr * (global_step / warmup_steps)
+        else:
+            lr = base_lr * max(0.0, 1 - (global_step - warmup_steps) / decay_steps)
+
+
+        w = w - lr * w_grad
+        b = b - lr * b_grad
+
+    epoch_loss /= num_batches
+
+    if epoch % 100 == 0:
+        print(f"현재 학습률 = {lr:.4f}")
+        print(f"현재 epoch = {epoch} , epoch loss = {epoch_loss:.4f} , w = {w:.4f} , b = {b:.4f} ")
+        print()
+
+print(f"학습 종료 결과 -> w : {w:.3f} , b : {b:.3f} final loss : {epoch_loss:.4f}")
